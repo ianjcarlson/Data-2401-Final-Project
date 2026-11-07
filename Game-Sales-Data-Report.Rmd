@@ -1,0 +1,19 @@
+---
+title: "Game Sales Data Report"
+author: "Ian Carlson, Dennis De Armas, Berlin Nieves"
+output: html_document
+date: "Data 2401"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+game_data <- read.csv("Game_Sales.csv")
+```
+
+# Introduction
+
+
+
+# Question
+
+- What factors influence the success of a video game?

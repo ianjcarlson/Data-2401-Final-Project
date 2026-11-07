@@ -1,0 +1,27 @@
+---
+title: "Game Sales Data Presentation"
+author: "Ian Carlson, Dennis De Armas, Berlin Nieves"
+output: slidy_presentation
+date: "Data 2401"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+# Introduction
+
+
+
+
+# Data
+
+
+
+
+# Problem Statement and Questions
+
+
+
