@@ -48,23 +48,57 @@ VGChartz Staff: <https://www.vgchartz.com/staff.php>
 
 The kaggle data was originally from Gregory Smith's web scrape of VGChartz Video Game Sales, but the kaggle creator, SID_TWR, extended it with more variables from a web scrape of Metacritic. The VGChartz data come from the VGChartz team, with CEO Brett Walton; linked above is the homepage and staff page of VGChartz. The VGChartz staff pages states that, "Brett Walton created VGChartz in the summer of 2006 as a way of collating all publicly available videogame sales data into one place" (VGChartz). Kaggle creator SID_TWR states that he was motivated by Gregory Smith's web scrape to extend the data in order to be more informative. The data was last updated in 2019 but the data itself has records up to 2016. One peculiarity of the data is that there is a notable amount of missing data. As SID_TWR states, "Metacritic only covers a subset of the platforms" (SID_TWR).
 
-Let's start by reading the data from the csv and taking a look at it using `glimpse()`.
+Let's start by reading the data from the csv
 
 ```{r}
 # Reading data from csv file using read.csv()
 game_data <- read.csv("Game_Sales.csv")
+```
 
+Next, there are two games that are who's names are blank and missing important data. Most likely they only had some of the data and decided to add what they could. Since they are missing a significant amount of important data, let's remove them.
+
+```{r}
+game_data |> filter(Name == "") # Missing data in question
+
+game_data <- game_data |> filter(Name != "") # Removing these two entries
+```
+
+Let's take a look at our cleaned data.
+
+```{r}
 # Taking a "glimpse" of the data
 glimpse(game_data)
 ```
 
-Thankfully, this data is tidy since each game has its own row, each variable has its own column and each value has its own cell. However, one thing we need to look out for once we start working with the data is all of the missing values.
+Thankfully, this data is tidy since each game has its own row, each variable has its own column and each value has its own cell. However, one thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
 
 In order to answer our questions, here are some important variables we are going to take a look at:
 
 | Variable | Explanation |
-|----|----|
+|------------------------------------|------------------------------------|
 | Name | This will be important to reference if we want to look at individual games. |
 | Genre | We can use this variable to see what genres perform the best. |
 | Global_Sales | This is how we will determine if a game was **commercial** success. |
 | Platform | We can use this variable to see what platforms have the most success. |
+
+# Exploratory Data Analysis
+
+The first question our report would like to explore is what game genres are the most commercially successful? In order to answer this question let's take a look at a plot of Total Global Sales per Genre.
+
+```{r}
+genre_sales_plot <- game_data |> # Store Data to variable to use in plotly
+  group_by(Genre) |> # Group Data by Genre
+  summarize(total_global_sales = sum(Global_Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
+  ggplot(aes(y = reorder(Genre, total_global_sales), # Create a plot of the findings
+             x = total_global_sales,
+             text = paste("Total Global Sales (Million):", total_global_sales))) + # "text" displays the exact number of units sold in ggplotly
+  geom_col() + # Use a column chart since we have one discrete variable and one continuous variable
+  labs(title = "Total Global Sales by Genre", 
+       x = "Total Global Sales (Million Units Sold)", 
+       y = "Genre") # Put genre on the y-axis for readability
+
+ggplotly(genre_sales_plot, tooltip = "text") # ggplotly makes the graph interactive, use the "text" we made before as the tooltip
+```
+
+Based on this graph, it's clear that the `Action` genre of video game sells the best, with the `Sports` and `Shooter` genres coming in second and third respectively.
+
