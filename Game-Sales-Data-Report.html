@@ -358,23 +358,130 @@ display: none;
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>Whenever a game is made, there is one question that sits at the back
-of the mind of its developers, “Is this going to be a success?” Our
-report hopes to highlight what factors influence whether a game becomes
-a commercial success or not. In order to do this, we will be using a
-data set of games up to 2016 with various characteristics of each game.
-Indicators like, game sales, game rating, developer, etc. will help us
-understand which kinds of games are generally more successful. In order
-to address this question, we will be using exploratory analysis and
-plotting to reveal what factors have the most influence on the success
-of a game. In doing so, our analysis will highlight the most important
-factors in indicating the potential success of a new game.</p>
+<p>When a video game is created, one question lingers in the minds of
+its developers: “Will it be a success?” The commercial success of a
+video game can represent and influence the popularity, prestige, and
+resources of the companies or developers behind it. Therefore,
+understanding the audience and their preferences becomes a topic of
+paramount importance. Our report seeks to identify the factors that
+influence the commercial success of a video game. To do this, we will
+use a dataset of video games up to 2016, with diverse characteristics
+for each. Indicators such as sales, ratings, and developer will help us
+understand what types of games tend to be most successful. To address
+this question, we will employ exploratory analyses and graphs that will
+reveal the most influential factors in a video game’s success. In this
+way, our analysis will highlight the most important factors for
+predicting the potential success of a new game.</p>
 </div>
 <div id="question" class="section level1">
 <h1>Question</h1>
 <ul>
-<li>What factors influence the success of a video game?</li>
+<li><p>What factors influence the success of a video game?</p>
+<ul>
+<li><p>Which game genres were the most commercially successful?</p></li>
+<li><p>Which video game was the best-selling game globally?</p></li>
+<li><p>How different are the sales of certain video games by
+category?</p></li>
+<li><p>Which platform had the highest sales success over the
+years?</p></li>
+<li><p>What was the average global sales for video games based on their
+genre?</p></li>
+</ul></li>
 </ul>
+</div>
+<div id="packages" class="section level1">
+<h1>Packages</h1>
+<pre class="r"><code># The tidyverse library is used for our exploratory analysis and plotting so that we can use tools like dplyer and ggplot.
+library(tidyverse)
+
+# The plotly library is used for making our graphs interactive, that way they can be even more informative than that of a static graph.
+library(plotly)</code></pre>
+</div>
+<div id="data-preparation" class="section level1">
+<h1>Data Preparation</h1>
+<p>Kaggle Dataset: SID_TWR. (2019, May 10). Video games sales dataset.
+Kaggledatasets. <a href="https://www.kaggle.com/datasets/sidtwr/videogames-sales-dataset" class="uri">https://www.kaggle.com/datasets/sidtwr/videogames-sales-dataset</a></p>
+<p>Source of data: Video game charts, game sales, top sellers, game data
+- VGChartz. (n.d.). Www.Vgchartz.Com. Retrieved November 6, 2026, from
+<a href="https://www.vgchartz.com/" class="uri">https://www.vgchartz.com/</a></p>
+<p>VGChartz Staff: <a href="https://www.vgchartz.com/staff.php" class="uri">https://www.vgchartz.com/staff.php</a></p>
+<p>The kaggle data was originally from Gregory Smith’s web scrape of
+VGChartz Video Game Sales, but the kaggle creator, SID_TWR, extended it
+with more variables from a web scrape of Metacritic. The VGChartz data
+come from the VGChartz team, with CEO Brett Walton; linked above is the
+homepage and staff page of VGChartz. The VGChartz staff pages states
+that, “Brett Walton created VGChartz in the summer of 2006 as a way of
+collating all publicly available videogame sales data into one place”
+(VGChartz). Kaggle creator SID_TWR states that he was motivated by
+Gregory Smith’s web scrape to extend the data in order to be more
+informative. The data was last updated in 2019 but the data itself has
+records up to 2016. One peculiarity of the data is that there is a
+notable amount of missing data. As SID_TWR states, “Metacritic only
+covers a subset of the platforms” (SID_TWR).</p>
+<p>Let’s start by reading the data from the csv and taking a look at it
+using <code>glimpse()</code>.</p>
+<pre class="r"><code># Reading data from csv file using read.csv()
+game_data &lt;- read.csv(&quot;Game_Sales.csv&quot;)
+
+# Taking a &quot;glimpse&quot; of the data
+glimpse(game_data)</code></pre>
+<pre><code>## Rows: 16,719
+## Columns: 16
+## $ Name            &lt;chr&gt; &quot;Wii Sports&quot;, &quot;Super Mario Bros.&quot;, &quot;Mario Kart Wii&quot;, &quot;…
+## $ Platform        &lt;chr&gt; &quot;Wii&quot;, &quot;NES&quot;, &quot;Wii&quot;, &quot;Wii&quot;, &quot;GB&quot;, &quot;GB&quot;, &quot;DS&quot;, &quot;Wii&quot;, &quot;…
+## $ Year_of_Release &lt;chr&gt; &quot;2006&quot;, &quot;1985&quot;, &quot;2008&quot;, &quot;2009&quot;, &quot;1996&quot;, &quot;1989&quot;, &quot;2006&quot;…
+## $ Genre           &lt;chr&gt; &quot;Sports&quot;, &quot;Platform&quot;, &quot;Racing&quot;, &quot;Sports&quot;, &quot;Role-Playin…
+## $ Publisher       &lt;chr&gt; &quot;Nintendo&quot;, &quot;Nintendo&quot;, &quot;Nintendo&quot;, &quot;Nintendo&quot;, &quot;Ninte…
+## $ NA_Sales        &lt;dbl&gt; 41.36, 29.08, 15.68, 15.61, 11.27, 23.20, 11.28, 13.96…
+## $ EU_Sales        &lt;dbl&gt; 28.96, 3.58, 12.76, 10.93, 8.89, 2.26, 9.14, 9.18, 6.9…
+## $ JP_Sales        &lt;dbl&gt; 3.77, 6.81, 3.79, 3.28, 10.22, 4.22, 6.50, 2.93, 4.70,…
+## $ Other_Sales     &lt;dbl&gt; 8.45, 0.77, 3.29, 2.95, 1.00, 0.58, 2.88, 2.84, 2.24, …
+## $ Global_Sales    &lt;dbl&gt; 82.53, 40.24, 35.52, 32.77, 31.37, 30.26, 29.80, 28.92…
+## $ Critic_Score    &lt;int&gt; 76, NA, 82, 80, NA, NA, 89, 58, 87, NA, NA, 91, NA, 80…
+## $ Critic_Count    &lt;int&gt; 51, NA, 73, 73, NA, NA, 65, 41, 80, NA, NA, 64, NA, 63…
+## $ User_Score      &lt;dbl&gt; 8.0, NA, 8.3, 8.0, NA, NA, 8.5, 6.6, 8.4, NA, NA, 8.6,…
+## $ User_Count      &lt;int&gt; 322, NA, 709, 192, NA, NA, 431, 129, 594, NA, NA, 464,…
+## $ Developer       &lt;chr&gt; &quot;Nintendo&quot;, &quot;&quot;, &quot;Nintendo&quot;, &quot;Nintendo&quot;, &quot;&quot;, &quot;&quot;, &quot;Ninte…
+## $ Rating          &lt;chr&gt; &quot;E&quot;, &quot;&quot;, &quot;E&quot;, &quot;E&quot;, &quot;&quot;, &quot;&quot;, &quot;E&quot;, &quot;E&quot;, &quot;E&quot;, &quot;&quot;, &quot;&quot;, &quot;E&quot;,…</code></pre>
+<p>Thankfully, this data is tidy since each game has its own row, each
+variable has its own column and each value has its own cell. However,
+one thing we need to look out for once we start working with the data is
+all of the missing values.</p>
+<p>In order to answer our questions, here are some important variables
+we are going to take a look at:</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Name</td>
+<td>This will be important to reference if we want to look at individual
+games.</td>
+</tr>
+<tr class="even">
+<td>Genre</td>
+<td>We can use this variable to see what genres perform the best.</td>
+</tr>
+<tr class="odd">
+<td>Global_Sales</td>
+<td>This is how we will determine if a game was
+<strong>commercial</strong> success.</td>
+</tr>
+<tr class="even">
+<td>Platform</td>
+<td>We can use this variable to see what platforms have the most
+success.</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

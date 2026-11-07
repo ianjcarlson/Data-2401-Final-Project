@@ -12,8 +12,59 @@ game_data <- read.csv("Game_Sales.csv")
 
 # Introduction
 
-Whenever a game is made, there is one question that sits at the back of the mind of its developers, "Is this going to be a success?" Our report hopes to highlight what factors influence whether a game becomes a commercial success or not. In order to do this, we will be using a data set of games up to 2016 with various characteristics of each game. Indicators like, game sales, game rating, developer, etc. will help us understand which kinds of games are generally more successful. In order to address this question, we will be using exploratory analysis and plotting to reveal what factors have the most influence on the success of a game. In doing so, our analysis will highlight the most important factors in indicating the potential success of a new game. 
+When a video game is created, one question lingers in the minds of its developers: "Will it be a success?" The commercial success of a video game can represent and influence the popularity, prestige, and resources of the companies or developers behind it. Therefore, understanding the audience and their preferences becomes a topic of paramount importance. Our report seeks to identify the factors that influence the commercial success of a video game. To do this, we will use a dataset of video games up to 2016, with diverse characteristics for each. Indicators such as sales, ratings, and developer will help us understand what types of games tend to be most successful. To address this question, we will employ exploratory analyses and graphs that will reveal the most influential factors in a video game's success. In this way, our analysis will highlight the most important factors for predicting the potential success of a new game.
 
 # Question
 
 - What factors influence the success of a video game?
+
+  - Which game genres were the most commercially successful?
+
+  - Which video game was the best-selling game globally?
+
+  - How different are the sales of certain video games by category?
+
+  - Which platform had the highest sales success over the years?
+
+  - What was the average global sales for video games based on their genre?
+
+# Packages
+
+```{r, warning = F, message = F}
+# The tidyverse library is used for our exploratory analysis and plotting so that we can use tools like dplyer and ggplot.
+library(tidyverse)
+
+# The plotly library is used for making our graphs interactive, that way they can be even more informative than that of a static graph.
+library(plotly)
+```
+
+# Data Preparation
+
+Kaggle Dataset: SID_TWR. (2019, May 10). Video games sales dataset. Kaggledatasets. <https://www.kaggle.com/datasets/sidtwr/videogames-sales-dataset>
+
+Source of data: Video game charts, game sales, top sellers, game data - VGChartz. (n.d.). Www.Vgchartz.Com. Retrieved November 6, 2026, from <https://www.vgchartz.com/>
+
+VGChartz Staff: <https://www.vgchartz.com/staff.php>
+
+The kaggle data was originally from Gregory Smith's web scrape of VGChartz Video Game Sales, but the kaggle creator, SID_TWR, extended it with more variables from a web scrape of Metacritic. The VGChartz data come from the VGChartz team, with CEO Brett Walton; linked above is the homepage and staff page of VGChartz. The VGChartz staff pages states that, "Brett Walton created VGChartz in the summer of 2006 as a way of collating all publicly available videogame sales data into one place" (VGChartz). Kaggle creator SID_TWR states that he was motivated by Gregory Smith's web scrape to extend the data in order to be more informative. The data was last updated in 2019 but the data itself has records up to 2016. One peculiarity of the data is that there is a notable amount of missing data. As SID_TWR states, "Metacritic only covers a subset of the platforms" (SID_TWR).
+
+Let's start by reading the data from the csv and taking a look at it using `glimpse()`.
+
+```{r}
+# Reading data from csv file using read.csv()
+game_data <- read.csv("Game_Sales.csv")
+
+# Taking a "glimpse" of the data
+glimpse(game_data)
+```
+
+Thankfully, this data is tidy since each game has its own row, each variable has its own column and each value has its own cell. However, one thing we need to look out for once we start working with the data is all of the missing values.
+
+In order to answer our questions, here are some important variables we are going to take a look at:
+
+| Variable | Explanation |
+|----|----|
+| Name | This will be important to reference if we want to look at individual games. |
+| Genre | We can use this variable to see what genres perform the best. |
+| Global_Sales | This is how we will determine if a game was **commercial** success. |
+| Platform | We can use this variable to see what platforms have the most success. |
