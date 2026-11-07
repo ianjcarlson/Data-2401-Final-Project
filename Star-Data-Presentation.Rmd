@@ -39,6 +39,6 @@ This presentation uses data from a Kaggle CSV that contains various data about s
 # Problem Statement and Questions
 
 - How are stars affected by their attributes?
-  - test1
+  - test2
 
 
