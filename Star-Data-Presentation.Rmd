@@ -7,6 +7,23 @@ date: "Data 2401"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+star_data <- read.csv("star_data.csv")
+star_type_key <- read.csv("star_type_key.csv")
+star_data <- star_data |> left_join(star_type_key, join_by(Star.type))
 ```
 
-## R Markdown
+
+# Introduction
+
+This presentation uses data from a Kaggle CSV that contains various data about stars for the purpose of classification.
+
+- Link to Data: https://www.kaggle.com/datasets/deepu1109/star-dataset
+
+
+# Questions
+
+- How are stars affected by their attributes?
+  - [example] Does the temperature affect the color?
+
+
