@@ -1,0 +1,24 @@
+---
+title: "Star Data Report"
+author: "Ian Carlson, Dennis De Armas, Berlin Nieves"
+output: html_document
+date: "Data 2401"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Added tidyverse for dplyer and ggplot
+library(tidyverse)
+
+# Added data from kaggle csv
+star_data <- read.csv("star_data.csv")
+
+# Created csv for the star type names since the original csv only had the star type names in the description.
+star_type_key <- read.csv("star_type_key.csv")
+
+# Joined the two together so that we can have all of our data in one place
+star_data <- star_data |> left_join(star_type_key, join_by(Star.type))
+```
+
+# Introduction
