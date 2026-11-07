@@ -12,7 +12,7 @@ game_data <- read.csv("Game_Sales.csv")
 
 # Introduction
 
-
+Whenever a game is made, there is one question that sits at the back of the mind of its developers, "Is this going to be a success?" Our report hopes to highlight what factors influence whether a game becomes a commercial success or not. In order to do this, we will be using a data set of games up to 2016 with various characteristics of each game. Indicators like, game sales, game rating, developer, etc. will help us understand which kinds of games are generally more successful. In order to address this question, we will be using exploratory analysis and plotting to reveal what factors have the most influence on the success of a game. In doing so, our analysis will highlight the most important factors in indicating the potential success of a new game. 
 
 # Question
 
