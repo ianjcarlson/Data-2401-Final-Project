@@ -36,9 +36,9 @@ This presentation uses data from a Kaggle CSV that contains various data about s
 - Link to Data: https://www.kaggle.com/datasets/deepu1109/star-dataset
 
 
-# Questions
+# Problem Statement and Questions
 
 - How are stars affected by their attributes?
-  - 
+  - test1
 
 
