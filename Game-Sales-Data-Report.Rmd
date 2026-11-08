@@ -12,7 +12,7 @@ game_data <- read.csv("Game_Sales.csv")
 
 # Introduction
 
-When a video game is created, one question lingers in the minds of its developers: "Will it be a success?" The commercial success of a video game can represent and influence the popularity, prestige, and resources of the companies or developers behind it. Therefore, understanding the audience and their preferences becomes a topic of paramount importance. Our report seeks to identify the factors that influence the commercial success of a video game. To do this, we will use a dataset of video games up to 2016, with diverse characteristics for each. Indicators such as sales, ratings, and developer will help us understand what types of games tend to be most successful. To address this question, we will employ exploratory analyses and graphs that will reveal the most influential factors in a video game's success. In this way, our analysis will highlight the most important factors for predicting the potential success of a new game.
+When a video game is created, one question lingers in the minds of its developers: "Will this game be a success?" The success of a video game can represent and influence the popularity, prestige, and resources of the companies or developers behind it. Therefore, understanding the audience and their preferences becomes a topic of paramount importance. Our report seeks to identify the factors that influence the commercial success of a video game. To do this, we will use a dataset of video games up to 2016, with diverse characteristics for each. Indicators such as sales, ratings, and developer will help us understand what types of games tend to be most successful. To address this question, we will employ exploratory analyses and graphs that will reveal the most influential factors in a video game's success. In this way, our analysis will highlight the most important factors for predicting the potential success of a new game.
 
 # Question
 
@@ -83,6 +83,8 @@ In order to answer our questions, here are some important variables we are going
 
 # Exploratory Data Analysis
 
+## Which game genres were the most commercially successful?
+
 The first question our report would like to explore is what game genres are the most commercially successful? In order to answer this question let's take a look at a plot of Total Global Sales per Genre.
 
 ```{r}
@@ -95,10 +97,33 @@ genre_sales_plot <- game_data |> # Store Data to variable to use in plotly
   geom_col() + # Use a column chart since we have one discrete variable and one continuous variable
   labs(title = "Total Global Sales by Genre", 
        x = "Total Global Sales (Million Units Sold)", 
-       y = "Genre") # Put genre on the y-axis for readability
+       y = "Genre") + # Put genre on the y-axis for readability
+  facet_wrap~
 
 ggplotly(genre_sales_plot, tooltip = "text") # ggplotly makes the graph interactive, use the "text" we made before as the tooltip
 ```
 
 Based on this graph, it's clear that the `Action` genre of video game sells the best, with the `Sports` and `Shooter` genres coming in second and third respectively.
+
+
+## What regions do the top genres sell the best in?
+
+Now that we know what genres sell the best, let's take a look at how they sell in each region. After all, depending on what genre a new game is, it might sell better in different regions. To do this, let's take a look at the percentage of sales by each region for the top 5 genres.
+
+```{r}
+game_data |>
+  group_by(Genre) |> # Grouping data by genre to calculate sales percentage for each
+  mutate(NA_Sales_Percent = (sum(NA_Sales) / sum(Global_Sales)) * 100, # Creating a column for the sales percentage for each region
+         EU_Sales_Percent = (sum(EU_Sales) / sum(Global_Sales)) * 100,
+         JP_Sales_Percent = (sum(JP_Sales) / sum(Global_Sales)) * 100,
+         Other_Sales_Percent = (sum(Other_Sales) / sum(Global_Sales)) * 100) |> 
+  filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing", "Platform")) |> # Filtering to the top 5 genres we found previously
+  select(Genre, NA_Sales_Percent, EU_Sales_Percent, JP_Sales_Percent, Other_Sales_Percent) |> # Selecting only the necessary columns
+  pivot_longer(cols = c(NA_Sales_Percent, EU_Sales_Percent, JP_Sales_Percent, Other_Sales_Percent), # Cleaning the data to make it tidy for our purpose
+               names_to = "Region",
+               values_to = "Percentage") |> 
+  ggplot(aes(x = Genre, y = Percentage, fill = Region)) +
+  geom_col(position = "dodge") # Using a dodged bar chart to make it easy to see which region a genre sells the best
+  
+```
 
