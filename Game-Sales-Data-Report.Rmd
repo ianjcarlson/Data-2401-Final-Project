@@ -18,11 +18,11 @@ The purpose of our report is to explore the relationship between video game char
 
 Through our analysis, we hope to identify which factors have the strongest relationships with video game sales and get a better understanding of what contributes to commercial success. Our findings may help developers and publishers make better decisions about future games, while also giving readers a better idea of how consumer opinions, critic reviews, and sales performance are connected.
 
-# Question
+# Problem Statement and Questions
 
 - What factors influence the success of a video game?
 
-  - Which game genres were the most commercially successful globally?
+  - Globally, which game genres were the most commercially successful?
 
   - What regions do the top genres sell the best in?
   
@@ -33,7 +33,7 @@ Through our analysis, we hope to identify which factors have the strongest relat
 # Packages
 
 ```{r, warning = F, message = F}
-# The tidyverse library is used for our exploratory analysis and plotting so that we can use tools like dplyer and ggplot.
+# The tidyverse library is used for our exploratory analysis and plotting. With this we can use tools like dplyer and ggplot.
 library(tidyverse)
 
 # The plotly library is used for making our graphs interactive, that way they can be even more informative than that of a static graph.
@@ -48,16 +48,16 @@ Source of data: Video game charts, game sales, top sellers, game data - VGChartz
 
 VGChartz Staff: <https://www.vgchartz.com/staff.php>
 
-The kaggle data was originally from Gregory Smith's web scrape of VGChartz Video Game Sales, but the kaggle creator, SID_TWR, extended it with more variables from a web scrape of Metacritic. The VGChartz data come from the VGChartz team, with CEO Brett Walton; linked above is the homepage and staff page of VGChartz. The VGChartz staff pages states that, "Brett Walton created VGChartz in the summer of 2006 as a way of collating all publicly available videogame sales data into one place" (VGChartz). Kaggle creator SID_TWR states that he was motivated by Gregory Smith's web scrape to extend the data in order to be more informative. The data was last updated in 2019 but the data itself has records up to 2016. One peculiarity of the data is that there is a notable amount of missing data. As SID_TWR states, "Metacritic only covers a subset of the platforms" (SID_TWR).
+This kaggle data set was originally from Gregory Smith's web scrape of VGChartz's Video Game Sales, but kaggle creator SID_TWR extended it with more variables from a web scrape of Metacritic. The VGChartz data come from the VGChartz team, with CEO Brett Walton; linked above is the homepage and staff page of VGChartz. The VGChartz staff pages states that, "Brett Walton created VGChartz in the summer of 2006 as a way of collating all publicly available videogame sales data into one place" (VGChartz). Kaggle creator SID_TWR states that he was motivated by Gregory Smith's web scrape to extend the data in order to be more informative. The data was last updated in 2019 but the data itself has records up to 2016. One peculiarity of the data is that there is a notable amount of missing data when it comes to ratings. As SID_TWR states, "Metacritic only covers a subset of the platforms" (SID_TWR).
 
-Let's start by reading the data from the csv
+Let's start by reading the data from the csv.
 
 ```{r}
 # Reading data from csv file using read.csv()
 game_data <- read.csv("Game_Sales.csv")
 ```
 
-Next, there are two games that are who's names are blank and missing important data. Most likely they only had some of the data and decided to add what they could. Since they are missing a significant amount of important data, let's remove them.
+Next, there are two games that are who's names are blank and missing important data. Most likely, only some of the data was available and whoever collected it decided to add what they could. Since they are missing key identifiers, let's remove them.
 
 ```{r}
 game_data |> filter(Name == "") # Missing data in question
@@ -66,7 +66,7 @@ game_data <- game_data |> filter(Name != "") # Removing these two entries
 ```
 
 
-Depending on the type of analysis we intend to do on this data, this data may not be the tidiest. To fix this, let's make a tidier version of the data. This way, we can choose between the two datasets depending on the question we are asking.
+Since each region has a column for sales, this data is not tidy. However, depending on the type of analysis we intend to do, this format could still be useful. In order to fix this, let's make a tidier version of the data. This way, we can choose between the two data sets depending on the question we are asking.
 
 ```{r}
 game_data_tidy <- game_data |> 
@@ -87,7 +87,7 @@ Let's take a look at our cleaned data.
 
 ```{r}
 # Taking a "glimpse" of the data
-glimpse(game_data)
+glimpse(game_data_tidy)
 ```
 
 One thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
@@ -100,11 +100,11 @@ In order to answer our questions, here are some important variables we are going
 | Genre | We can use this variable to see what genres perform the best. |
 | Region | We can use this variable to compare data between different regions |
 | Sales | This is how we will determine if a game was **commercial** success. |
-| Platform | We can use this variable to see what platforms have the most success. |
+| Publisher | We can use this variable to see what publishers have the most success. |
 
 # Exploratory Data Analysis
 
-## Which game genres were the most commercially successful globally?
+## Globally, which game genres were the most commercially successful?
 
 The first question our report would like to explore is what game genres are the most commercially successful? In order to answer this question let's take a look at a plot of Total Global Sales per Genre.
 
@@ -153,14 +153,21 @@ genre_region_plot <- game_data |>
 ggplotly(genre_region_plot, tooltip = "text")
 ```
 
+
 ## Do newer video games receive higher or lower user ratings?
 
 ```{r}
 game_data |> 
-  mutate(Game_Age = case_when(Year_of_Release <= 2000 ~ "Old", Year_of_Release > 2000 ~ "New")) |> 
+  mutate(Game_Age = case_when(Year_of_Release < 2000 ~ "Older", Year_of_Release >= 2000 ~ "Newer")) |> 
   filter(!is.na(User_Score)) |> 
   ggplot(aes(x = User_Score, fill = Game_Age)) +
-  geom_density(alpha = .5)
+  geom_density(alpha = .5) +
+  labs(title = "User Score by Game Age", 
+       x = "User Score (Out of 10)", 
+       y = "Density",
+       subtitle = "Considering games before 2000 as old",
+       fill = "Game Age")
+
 ```
 
 ## Do video games with higher critic scores sell more copies worldwide?
@@ -170,17 +177,26 @@ game_data |>
   filter(!is.na(Critic_Score)) |> 
   ggplot(aes(x = Critic_Score, y = Global_Sales)) +
   geom_jitter() +
-  geom_smooth()
+  geom_smooth() +
+  labs(title = "Relationship between Critic Score and Sales", 
+       x = "Critic Score (Out of 100)",
+       y = "Global Sales (Million Units Sold)")
 ```
-## What is the top selling game
 
-Possible graph
+## What game publishers sell the most games
 
 ```{r}
-game_data |> 
-  group_by(Genre) |> 
-  filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> 
-  ggplot(aes(x = Global_Sales, y = Genre)) + 
-  geom_boxplot() +
-  scale_x_log10()
+game_data_tidy |> 
+  group_by(Publisher) |> 
+  summarize(Total_Sales = sum(Sales, na.rm = T)) |> 
+  slice_max(Total_Sales, n = 5)
+```
+
+## What is the top selling game
+
+```{r}
+game_data_tidy |> 
+  filter(Region == "Global") |> 
+  slice_max(Sales, n = 1) |> 
+  select(Name, Platform, Publisher, Sales)
 ```
