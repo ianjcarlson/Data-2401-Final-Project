@@ -18,15 +18,11 @@ When a video game is created, one question lingers in the minds of its developer
 
 - What factors influence the success of a video game?
 
-  - Which game genres were the most commercially successful?
+  - Which game genres were the most commercially successful globally?
 
-  - Which video game was the best-selling game globally?
-
-  - How different are the sales of certain video games by category?
-
-  - Which platform had the highest sales success over the years?
-
-  - What was the average global sales for video games based on their genre?
+  - What regions do the top genres sell the best in?
+  
+  - Do video games with higher critic scores sell more copies worldwide?
 
 # Packages
 
@@ -63,28 +59,13 @@ game_data |> filter(Name == "") # Missing data in question
 game_data <- game_data |> filter(Name != "") # Removing these two entries
 ```
 
-Also, this data is not tidy! Since we have a column for sales for each region, there are multiple columns telling essentially the same information. To fix this, let's create a new column called `Region` and have a single column for Sales, making the combination of `Name` and `Region` the unique identifier for each title.
-
-```{r}
-game_data_tidy <- game_data |> 
-  rename('North America' = NA_Sales,
-         'European Union' = EU_Sales,
-         'Japan' = JP_Sales,
-         'Other' = Other_Sales,
-         'Global' = Global_Sales) |> 
-  pivot_longer(cols = c('North America', 'European Union', 'Japan', 'Other', 'Global'),
-                          names_to = "Region",
-                          values_to = "Sales") |> 
-  relocate(Region, .before = Platform) |> 
-  relocate(Sales, .before = Critic_Score)
-```
-
 Let's take a look at our cleaned data.
 
 ```{r}
 # Taking a "glimpse" of the data
 glimpse(game_data_tidy)
 ```
+Thankfully, this data is tidy since each game has its own row, each variable has its own column and each value has its own cell. However, one thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
 
 One thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
 
@@ -105,10 +86,9 @@ In order to answer our questions, here are some important variables we are going
 The first question our report would like to explore is what game genres are the most commercially successful? In order to answer this question let's take a look at a plot of Total Global Sales per Genre.
 
 ```{r}
-genre_sales_plot <- game_data_tidy |> # Store Data to variable to use in plotly
+genre_sales_plot <- game_data |> # Store Data to variable to use in plotly
   group_by(Genre) |> # Group Data by Genre
-  filter(Region == "Global") |> # Filter to Global Sales
-  summarize(total_global_sales = sum(Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
+  summarize(total_global_sales = sum(Global_Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
   ggplot(aes(y = reorder(Genre, total_global_sales), # Create a plot of the findings
              x = total_global_sales,
              text = paste("Total Global Sales (Million):", total_global_sales))) + # "text" displays the exact number of units sold in ggplotly
@@ -142,14 +122,49 @@ game_data |>
   geom_col(position = "dodge") # Using a dodged bar chart to make it easy to see which region a genre sells the best
   
 ```
+## Do newer video games receive higher or lower user ratings?
+
+```{r}
+game_data |> 
+  mutate(Game_Age = case_when(Year_of_Release <= 2000 ~ "Old", Year_of_Release > 2000 ~ "New")) |> 
+  filter(!is.na(User_Score)) |> 
+  ggplot(aes(x = User_Score, fill = Game_Age)) +
+  geom_density(alpha = .5)
+```
+
+## Do video games with higher critic scores sell more copies worldwide?
+
+```{r, warning = F, message = F}
+game_data_tidy |> 
+  filter(Region == "Global", !is.na(Critic_Score)) |> 
+  ggplot(aes(x = Critic_Score, y = Sales)) +
+  geom_jitter() +
+  geom_smooth()
+```
+
+
+
+```{r}
+ggplot(game_data, aes(x = Year_of_Release, y = User_Score)) +
+  geom_point(color = "darkgreen") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "Release Year vs User Score",
+    x = "Year of Release",
+    y = "User Score"
+  ) +
+  theme_minimal()
+```
+
+
 
 Possible graph
 
 ```{r}
-game_data_tidy |> 
+game_data |> 
   group_by(Genre) |> 
-  filter(Region == "Global", Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> 
-  ggplot(aes(x = Sales, y = Genre)) + 
-  geom_violin() +
+  filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> 
+  ggplot(aes(x = Global_Sales, y = Genre)) + 
+  geom_boxplot() +
   scale_x_log10()
 ```
