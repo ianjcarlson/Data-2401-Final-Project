@@ -63,14 +63,30 @@ game_data |> filter(Name == "") # Missing data in question
 game_data <- game_data |> filter(Name != "") # Removing these two entries
 ```
 
+Also, this data is not tidy! Since we have a column for sales for each region, there are multiple columns telling essentially the same information. To fix this, let's create a new column called `Region` and have a single column for Sales, making the combination of `Name` and `Region` the unique identifier for each title.
+
+```{r}
+game_data_tidy <- game_data |> 
+  rename('North America' = NA_Sales,
+         'European Union' = EU_Sales,
+         'Japan' = JP_Sales,
+         'Other' = Other_Sales,
+         'Global' = Global_Sales) |> 
+  pivot_longer(cols = c('North America', 'European Union', 'Japan', 'Other', 'Global'),
+                          names_to = "Region",
+                          values_to = "Sales") |> 
+  relocate(Region, .before = Platform) |> 
+  relocate(Sales, .before = Critic_Score)
+```
+
 Let's take a look at our cleaned data.
 
 ```{r}
 # Taking a "glimpse" of the data
-glimpse(game_data)
+glimpse(game_data_tidy)
 ```
 
-Thankfully, this data is tidy since each game has its own row, each variable has its own column and each value has its own cell. However, one thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
+One thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
 
 In order to answer our questions, here are some important variables we are going to take a look at:
 
@@ -78,33 +94,33 @@ In order to answer our questions, here are some important variables we are going
 |------------------------------------|------------------------------------|
 | Name | This will be important to reference if we want to look at individual games. |
 | Genre | We can use this variable to see what genres perform the best. |
-| Global_Sales | This is how we will determine if a game was **commercial** success. |
+| Region | We can use this variable to compare data between different regions |
+| Sales | This is how we will determine if a game was **commercial** success. |
 | Platform | We can use this variable to see what platforms have the most success. |
 
 # Exploratory Data Analysis
 
-## Which game genres were the most commercially successful?
+## Which game genres were the most commercially successful globally?
 
 The first question our report would like to explore is what game genres are the most commercially successful? In order to answer this question let's take a look at a plot of Total Global Sales per Genre.
 
 ```{r}
-genre_sales_plot <- game_data |> # Store Data to variable to use in plotly
+genre_sales_plot <- game_data_tidy |> # Store Data to variable to use in plotly
   group_by(Genre) |> # Group Data by Genre
-  summarize(total_global_sales = sum(Global_Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
+  filter(Region == "Global") |> # Filter to Global Sales
+  summarize(total_global_sales = sum(Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
   ggplot(aes(y = reorder(Genre, total_global_sales), # Create a plot of the findings
              x = total_global_sales,
              text = paste("Total Global Sales (Million):", total_global_sales))) + # "text" displays the exact number of units sold in ggplotly
   geom_col() + # Use a column chart since we have one discrete variable and one continuous variable
   labs(title = "Total Global Sales by Genre", 
        x = "Total Global Sales (Million Units Sold)", 
-       y = "Genre") + # Put genre on the y-axis for readability
-  facet_wrap~
+       y = "Genre") # Put genre on the y-axis for readability
 
 ggplotly(genre_sales_plot, tooltip = "text") # ggplotly makes the graph interactive, use the "text" we made before as the tooltip
 ```
 
 Based on this graph, it's clear that the `Action` genre of video game sells the best, with the `Sports` and `Shooter` genres coming in second and third respectively.
-
 
 ## What regions do the top genres sell the best in?
 
@@ -117,7 +133,7 @@ game_data |>
          EU_Sales_Percent = (sum(EU_Sales) / sum(Global_Sales)) * 100,
          JP_Sales_Percent = (sum(JP_Sales) / sum(Global_Sales)) * 100,
          Other_Sales_Percent = (sum(Other_Sales) / sum(Global_Sales)) * 100) |> 
-  filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing", "Platform")) |> # Filtering to the top 5 genres we found previously
+  filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> # Filtering to the top 5 genres we found previously
   select(Genre, NA_Sales_Percent, EU_Sales_Percent, JP_Sales_Percent, Other_Sales_Percent) |> # Selecting only the necessary columns
   pivot_longer(cols = c(NA_Sales_Percent, EU_Sales_Percent, JP_Sales_Percent, Other_Sales_Percent), # Cleaning the data to make it tidy for our purpose
                names_to = "Region",
@@ -127,3 +143,13 @@ game_data |>
   
 ```
 
+Possible graph
+
+```{r}
+game_data_tidy |> 
+  group_by(Genre) |> 
+  filter(Region == "Global", Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> 
+  ggplot(aes(x = Sales, y = Genre)) + 
+  geom_violin() +
+  scale_x_log10()
+```
