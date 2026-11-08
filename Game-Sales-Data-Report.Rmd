@@ -12,7 +12,11 @@ game_data <- read.csv("Game_Sales.csv")
 
 # Introduction
 
-When a video game is created, one question lingers in the minds of its developers: "Will this game be a success?" The success of a video game can represent and influence the popularity, prestige, and resources of the companies or developers behind it. Therefore, understanding the audience and their preferences becomes a topic of paramount importance. Our report seeks to identify the factors that influence the commercial success of a video game. To do this, we will use a dataset of video games up to 2016, with diverse characteristics for each. Indicators such as sales, ratings, and developer will help us understand what types of games tend to be most successful. To address this question, we will employ exploratory analyses and graphs that will reveal the most influential factors in a video game's success. In this way, our analysis will highlight the most important factors for predicting the potential success of a new game.
+When a video game is created, one important question remains in the minds of its developers: “Will this game be successful?” The success of a video game can have a big impact on a company's reputation, popularity, and financial growth. With so many games being released each year, understanding why certain games are more successful than others is important for developers, publishers, and the gaming industry. By looking at different factors that may contribute to a game's success, we can get a better understanding of what affects its performance in the market.
+
+The purpose of our report is to explore the relationship between video game characteristics and their commercial success. To do this, we will analyze a dataset containing video games released through 2016, including information such as global sales, regional sales, critic scores, user ratings, and release years. We will use exploratory data analysis, scatterplots, and correlation analysis to look for patterns and relationships between these variables. These methods will help us see whether games with higher review scores tend to have greater sales and if sales trends are similar across different regions.
+
+Through our analysis, we hope to identify which factors have the strongest relationships with video game sales and get a better understanding of what contributes to commercial success. Our findings may help developers and publishers make better decisions about future games, while also giving readers a better idea of how consumer opinions, critic reviews, and sales performance are connected.
 
 # Question
 
@@ -23,6 +27,8 @@ When a video game is created, one question lingers in the minds of its developer
   - What regions do the top genres sell the best in?
   
   - Do video games with higher critic scores sell more copies worldwide?
+  
+  - Do newer video games receive higher or lower user ratings?
 
 # Packages
 
@@ -59,13 +65,30 @@ game_data |> filter(Name == "") # Missing data in question
 game_data <- game_data |> filter(Name != "") # Removing these two entries
 ```
 
+
+Depending on the type of analysis we intend to do on this data, this data may not be the tidiest. To fix this, let's make a tidier version of the data. This way, we can choose between the two datasets depending on the question we are asking.
+
+```{r}
+game_data_tidy <- game_data |> 
+  rename('North America' = NA_Sales,
+         'European Union' = EU_Sales,
+         'Japan' = JP_Sales,
+         'Other' = Other_Sales,
+         'Global' = Global_Sales) |> 
+  pivot_longer(cols = c('North America', 'European Union', 'Japan', 'Other', 'Global'),
+                          names_to = "Region",
+                          values_to = "Sales") |> 
+  relocate(Region, .before = Platform) |> 
+  relocate(Sales, .before = Critic_Score)
+```
+
+
 Let's take a look at our cleaned data.
 
 ```{r}
 # Taking a "glimpse" of the data
-glimpse(game_data_tidy)
+glimpse(game_data)
 ```
-Thankfully, this data is tidy since each game has its own row, each variable has its own column and each value has its own cell. However, one thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
 
 One thing we need to look out for once we start working with the data is any missing values that might affect our calculations.
 
@@ -107,21 +130,29 @@ Based on this graph, it's clear that the `Action` genre of video game sells the 
 Now that we know what genres sell the best, let's take a look at how they sell in each region. After all, depending on what genre a new game is, it might sell better in different regions. To do this, let's take a look at the percentage of sales by each region for the top 5 genres.
 
 ```{r}
-game_data |>
+genre_region_plot <- game_data |>
   group_by(Genre) |> # Grouping data by genre to calculate sales percentage for each
-  mutate(NA_Sales_Percent = (sum(NA_Sales) / sum(Global_Sales)) * 100, # Creating a column for the sales percentage for each region
-         EU_Sales_Percent = (sum(EU_Sales) / sum(Global_Sales)) * 100,
-         JP_Sales_Percent = (sum(JP_Sales) / sum(Global_Sales)) * 100,
-         Other_Sales_Percent = (sum(Other_Sales) / sum(Global_Sales)) * 100) |> 
+  mutate('NA' = (sum(NA_Sales) / sum(Global_Sales)) * 100, # Creating a column for the sales percentage for each region
+         EU = (sum(EU_Sales) / sum(Global_Sales)) * 100,
+         JP = (sum(JP_Sales) / sum(Global_Sales)) * 100,
+         Other = (sum(Other_Sales) / sum(Global_Sales)) * 100) |> 
   filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> # Filtering to the top 5 genres we found previously
-  select(Genre, NA_Sales_Percent, EU_Sales_Percent, JP_Sales_Percent, Other_Sales_Percent) |> # Selecting only the necessary columns
-  pivot_longer(cols = c(NA_Sales_Percent, EU_Sales_Percent, JP_Sales_Percent, Other_Sales_Percent), # Cleaning the data to make it tidy for our purpose
+  select(Genre, 'NA', EU, JP, Other) |> # Selecting only the necessary columns
+  pivot_longer(cols = c('NA', EU, JP, Other), # Cleaning the data to make it tidy for our purpose
                names_to = "Region",
                values_to = "Percentage") |> 
-  ggplot(aes(x = Genre, y = Percentage, fill = Region)) +
-  geom_col(position = "dodge") # Using a dodged bar chart to make it easy to see which region a genre sells the best
+  ggplot(aes(x = Genre, 
+             y = Percentage, 
+             fill = Region,
+             text = paste0("Genre: ", Genre,
+                          "<br>Percentage: ", Percentage, "%",
+                          "<br>Region: ", Region))) +
+  geom_col(position = "dodge") + # Using a dodged bar chart to make it easy to see which region a genre sells the best
+  labs(title = "Genre Sales Percentage by Region") + theme_bw()
   
+ggplotly(genre_region_plot, tooltip = "text")
 ```
+
 ## Do newer video games receive higher or lower user ratings?
 
 ```{r}
@@ -135,28 +166,13 @@ game_data |>
 ## Do video games with higher critic scores sell more copies worldwide?
 
 ```{r, warning = F, message = F}
-game_data_tidy |> 
-  filter(Region == "Global", !is.na(Critic_Score)) |> 
-  ggplot(aes(x = Critic_Score, y = Sales)) +
+game_data |> 
+  filter(!is.na(Critic_Score)) |> 
+  ggplot(aes(x = Critic_Score, y = Global_Sales)) +
   geom_jitter() +
   geom_smooth()
 ```
-
-
-
-```{r}
-ggplot(game_data, aes(x = Year_of_Release, y = User_Score)) +
-  geom_point(color = "darkgreen") +
-  geom_smooth(method = "lm", se = FALSE, color = "red") +
-  labs(
-    title = "Release Year vs User Score",
-    x = "Year of Release",
-    y = "User Score"
-  ) +
-  theme_minimal()
-```
-
-
+## What is the top selling game
 
 Possible graph
 
