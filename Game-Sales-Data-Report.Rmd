@@ -109,9 +109,10 @@ In order to answer our questions, here are some important variables we are going
 The first question our report would like to explore is what game genres are the most commercially successful? In order to answer this question let's take a look at a plot of Total Global Sales per Genre.
 
 ```{r}
-genre_sales_plot <- game_data |> # Store Data to variable to use in plotly
+genre_sales_plot <- game_data_tidy |> # Store Data to variable to use in plotly
+  filter(Region == "Global") |> 
   group_by(Genre) |> # Group Data by Genre
-  summarize(total_global_sales = sum(Global_Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
+  summarize(total_global_sales = sum(Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
   ggplot(aes(y = reorder(Genre, total_global_sales), # Create a plot of the findings
              x = total_global_sales,
              text = paste("Total Global Sales (Million):", total_global_sales))) + # "text" displays the exact number of units sold in ggplotly
@@ -127,37 +128,34 @@ Based on this graph, it's clear that the `Action` genre of video game sells the 
 
 ## What regions do the top genres sell the best in?
 
-Now that we know what genres sell the best, let's take a look at how they sell in each region. After all, depending on what genre a new game is, it might sell better in different regions. To do this, let's take a look at the percentage of sales by each region for the top 5 genres.
+Now that we know what genres sell the best, let's take a look at how they sell in each region. After all, depending on what genre a new game is, it might sell better in different regions. To do this, let's take a look at the Total sales by each region for the top 4 genres.
 
 ```{r}
-genre_region_plot <- game_data |>
-  group_by(Genre) |> # Grouping data by genre to calculate sales percentage for each
-  mutate('NA' = (sum(NA_Sales) / sum(Global_Sales)) * 100, # Creating a column for the sales percentage for each region
-         EU = (sum(EU_Sales) / sum(Global_Sales)) * 100,
-         JP = (sum(JP_Sales) / sum(Global_Sales)) * 100,
-         Other = (sum(Other_Sales) / sum(Global_Sales)) * 100) |> 
-  filter(Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> # Filtering to the top 5 genres we found previously
-  select(Genre, 'NA', EU, JP, Other) |> # Selecting only the necessary columns
-  pivot_longer(cols = c('NA', EU, JP, Other), # Cleaning the data to make it tidy for our purpose
-               names_to = "Region",
-               values_to = "Percentage") |> 
+genre_region_plot <- game_data_tidy |> 
+  filter(Region != "Global", # Filtering out "Global" to view the genre sales between regions
+         Genre %in% c("Action", "Sports", "Shooter", "Role-Playing")) |> # Filter to top 4 genres
+  group_by(Genre, Region) |> # Group by genre and region to calculate total sales for each genre and region
+  mutate(Total_Sales = sum(Sales)) |> # Create new column for total sales by genre and region
   ggplot(aes(x = Genre, 
-             y = Percentage, 
-             fill = Region,
+             y = Total_Sales, 
+             fill = Region, 
              text = paste0("Genre: ", Genre,
-                          "<br>Percentage: ", Percentage, "%",
+                          "<br>Total Sales: ", Total_Sales,
                           "<br>Region: ", Region))) +
-  geom_col(position = "dodge") + # Using a dodged bar chart to make it easy to see which region a genre sells the best
-  labs(title = "Genre Sales Percentage by Region") + theme_bw()
-  
-ggplotly(genre_region_plot, tooltip = "text")
+  geom_col(position = "dodge") + # Dodged bar chart to make it easy to see which region sells the most of each genre
+  labs(title = "Genre Sales by Region",
+       x = "Genre",
+       y = "Total Sales (Million Units Sold)") +
+  theme_bw()
+
+ggplotly(genre_region_plot, tooltip = "text")  # ggplotly to make plot interactive 
 ```
 
 
 ## Do newer video games receive higher or lower user ratings?
 
 ```{r}
-game_data |> 
+game_data_tidy |> 
   mutate(Game_Age = case_when(Year_of_Release < 2000 ~ "Older", Year_of_Release >= 2000 ~ "Newer")) |> 
   filter(!is.na(User_Score)) |> 
   ggplot(aes(x = User_Score, fill = Game_Age)) +
@@ -173,9 +171,9 @@ game_data |>
 ## Do video games with higher critic scores sell more copies worldwide?
 
 ```{r, warning = F, message = F}
-game_data |> 
-  filter(!is.na(Critic_Score)) |> 
-  ggplot(aes(x = Critic_Score, y = Global_Sales)) +
+game_data_tidy |> 
+  filter(!is.na(Critic_Score), Region == "Global") |> 
+  ggplot(aes(x = Critic_Score, y = Sales)) +
   geom_jitter() +
   geom_smooth() +
   labs(title = "Relationship between Critic Score and Sales", 
