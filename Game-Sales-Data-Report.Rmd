@@ -110,13 +110,13 @@ The first question our report would like to explore is what game genres are the 
 
 ```{r}
 genre_sales_plot <- game_data_tidy |> # Store Data to variable to use in plotly
-  filter(Region == "Global") |> 
+  filter(Region == "Global") |> # Filtered to Global to compare Sales between genres
   group_by(Genre) |> # Group Data by Genre
   summarize(total_global_sales = sum(Sales, na.rm = T)) |> # Find the Total Global Sales for each Genre
   ggplot(aes(y = reorder(Genre, total_global_sales), # Create a plot of the findings
              x = total_global_sales,
              text = paste("Total Global Sales (Million):", total_global_sales))) + # "text" displays the exact number of units sold in ggplotly
-  geom_col() + # Use a column chart since we have one discrete variable and one continuous variable
+  geom_col() + # Use a column chart since we have one discrete variable and one continuous variable (1 Continous, 1 Discrete)
   labs(title = "Total Global Sales by Genre", 
        x = "Total Global Sales (Million Units Sold)", 
        y = "Genre") # Put genre on the y-axis for readability
@@ -142,7 +142,7 @@ genre_region_plot <- game_data_tidy |>
              text = paste0("Genre: ", Genre,
                           "<br>Total Sales: ", Total_Sales,
                           "<br>Region: ", Region))) +
-  geom_col(position = "dodge") + # Dodged bar chart to make it easy to see which region sells the most of each genre
+  geom_col(position = "dodge") + # Dodged bar chart to make it easy to see which region sells the most of each genre (1 continuous, 2 Discrete)
   labs(title = "Genre Sales by Region",
        x = "Genre",
        y = "Total Sales (Million Units Sold)") +
@@ -156,10 +156,11 @@ ggplotly(genre_region_plot, tooltip = "text")  # ggplotly to make plot interacti
 
 ```{r}
 game_data_tidy |> 
-  mutate(Game_Age = case_when(Year_of_Release < 2000 ~ "Older", Year_of_Release >= 2000 ~ "Newer")) |> 
-  filter(!is.na(User_Score)) |> 
+  mutate(Game_Age = case_when(Year_of_Release < 2000 ~ "Older", # Create a new column to tell whether a game is "new" or "old"
+                              Year_of_Release >= 2000 ~ "Newer")) |> 
+  filter(!is.na(User_Score)) |> # Remove NA Data so as not to affect our final graph
   ggplot(aes(x = User_Score, fill = Game_Age)) +
-  geom_density(alpha = .5) +
+  geom_density(alpha = .5) + # Density plot to compare score between newer and older games (1 continuous, filled by discrete)
   labs(title = "User Score by Game Age", 
        x = "User Score (Out of 10)", 
        y = "Density",
@@ -172,9 +173,9 @@ game_data_tidy |>
 
 ```{r, warning = F, message = F}
 game_data_tidy |> 
-  filter(!is.na(Critic_Score), Region == "Global") |> 
-  ggplot(aes(x = Critic_Score, y = Sales)) +
-  geom_jitter() +
+  filter(!is.na(Critic_Score), Region == "Global") |> # Remove NA and filter to global data
+  ggplot(aes(x = Critic_Score, y = Sales)) + 
+  geom_jitter() + # Scatterplot with jitter to make it easier to see the relationship between Critic score and Sales. (2 Continuous)
   geom_smooth() +
   labs(title = "Relationship between Critic Score and Sales", 
        x = "Critic Score (Out of 100)",
